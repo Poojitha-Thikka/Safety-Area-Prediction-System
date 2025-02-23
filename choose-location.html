@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choose Your Location</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            background-color: rgb(49, 142, 148);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 40px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 500px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .safe {
+            color: green;
+        }
+        .unsafe {
+            color: red;
+        }
+        .suggestions-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        .suggestions-btn:hover {
+            background-color: #218838;
+        }
+        .suggestions-btn.hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Choose Your Location</h1>
+        <form id="locationForm">
+            <div class="form-group">
+                <label for="location">Enter Location (City/District/Street):</label>
+                <input type="text" id="location" name="location" placeholder="Enter location" required />
+            </div>
+            <button type="submit">Check Safety</button>
+        </form>
+        <div id="result" class="result"></div>
+        <!-- Suggestions Button (Hidden by default) -->
+        <button class="suggestions-btn hidden" onclick="window.location.href='suggestions.html'">Get Suggestions</button>
+    </div>
+
+    <script>
+        // Simulated crime data (this can be expanded with real data)
+        const crimeData = {
+            "Hasanparthy": { "crimes": 12, "status": "unsafe" },
+            "Hanamkonda": { "crimes": 2, "status": "safe" },
+            "Chinthagattu": { "crimes": 3, "status": "unsafe" },
+            "Waddepally": { "crimes": 1, "status": "safe" },
+            "Hyderabad": { "crimes": 8, "status": "unsafe" }
+        };
+
+        // Handle form submission
+        document.getElementById('locationForm').addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevent form from submitting
+
+            // Get the entered location
+            const location = document.getElementById('location').value.trim();
+
+            // Check if location exists in our simulated crime data
+            const resultDiv = document.getElementById('result');
+            const suggestionsBtn = document.querySelector('.suggestions-btn');
+            if (crimeData[location]) {
+                const crimeInfo = crimeData[location];
+                if (crimeInfo.status === "unsafe") {
+                    resultDiv.innerHTML = `<p class="unsafe">The area is unsafe! Please be cautious.</p>`;
+                    suggestionsBtn.classList.remove('hidden');  // Show suggestions button
+                } else {
+                    resultDiv.innerHTML = `<p class="safe">The area is safe.</p>`;
+                    suggestionsBtn.classList.add('hidden');  // Hide suggestions button
+                }
+            } else {
+                resultDiv.innerHTML = `<p class="unsafe">Location not found in the database. Please check again.</p>`;
+                suggestionsBtn.classList.add('hidden');  // Hide suggestions button if location not found
+            }
+        });
+    </script>
+
+</body>
+</html>
+

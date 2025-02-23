@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://kit.fontawesome.com/2d0ea8343b.js" crossorigin="anonymous"></script>
+    <title>Choose an Option</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color:rgb(49, 142, 148);
+        }
+        .container {
+            text-align: center;
+            background-color:white;
+            border-radius: 8px;
+            padding: 40px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+        .option {
+            padding: 15px 30px;
+            border-radius: 5px;
+            background-color: #007BFF;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .option:hover {
+            background-color: #0056b3;
+        }
+        .option + .option {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Let's get started</h1>
+        <div class="options">
+            <a href="index.html" class="option">Know your location</a><br>
+            <a href="choose-location.html" class="option">Choose Your Location</a> <!-- New Button -->
+            
+            <a href="feedback.html" class="option">Feedback</a>
+
+        </div>
+    </div>
+</body>
+</html>

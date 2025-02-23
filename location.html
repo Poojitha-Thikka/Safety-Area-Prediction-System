@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location Selection with Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #map {
+            height: 500px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Select Location</h1>
+        <form id="locationForm">
+            <label for="country">Country</label>
+            <select id="country">
+                <option value="">Select Country</option>
+                <option value="India">India</option>
+                <option value="USA">USA</option>
+            </select>
+
+            <label for="state">State</label>
+            <select id="state">
+                <option value="">Select State</option>
+            </select>
+
+            <label for="district">District</label>
+            <select id="district">
+                <option value="">Select District</option>
+            </select>
+
+            <label for="village">Village</label>
+            <select id="village">
+                <option value="">Select Village</option>
+            </select>
+
+            <label for="street">Street</label>
+            <select id="street">
+                <option value="">Select Street</option>
+            </select>
+
+            <button type="button" onclick="locateOnMap()">Show on Map</button>
+        </form>
+    </div>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // Map Initialization
+        const map = L.map('map').setView([17.9784, 79.5941], 13); // Default coordinates near Hanamkonda
+
+        // Add OpenStreetMap tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Location data for dropdowns
+        const locationData = {
+            India: {
+                Telangana: {
+                    Hanamkonda: ["Hasanparthy", "Subedari", "Jangaon"],
+                    Hyderabad: ["Banjara Hills", "Jubilee Hills", "Gachibowli"]
+                },
+                Maharashtra: {
+                    Mumbai: ["Andheri", "Borivali", "Versova"],
+                    Pune: ["Hinjewadi", "Kothrud", "Pimpri"]
+                }
+            }
+        };
+
+        // Populate state, district, village, street dropdowns
+        document.getElementById("country").addEventListener("change", function () {
+            const country = this.value;
+            const stateDropdown = document.getElementById("state");
+            stateDropdown.innerHTML = "<option value=''>Select State</option>";
+            if (country && locationData[country]) {
+                Object.keys(locationData[country]).forEach(function (state) {
+                    const option = document.createElement("option");
+                    option.value = state;
+                    option.textContent = state;
+                    stateDropdown.appendChild(option);
+                });
+            }
+            document.getElementById("district").innerHTML = "<option value=''>Select District</option>";
+            document.getElementById("village").innerHTML = "<option value=''>Select Village</option>";
+            document.getElementById("street").innerHTML = "<option value=''>Select Street</option>";
+        });
+
+        document.getElementById("state").addEventListener("change", function () {
+            const country = document.getElementById("country").value;
+            const state = this.value;
+            const districtDropdown = document.getElementById("district");
+            districtDropdown.innerHTML = "<option value=''>Select District</option>";
+            if (country && state && locationData[country] && locationData[country][state]) {
+                Object.keys(locationData[country][state]).forEach(function (district) {
+                    const option = document.createElement("option");
+                    option.value = district;
+                    option.textContent = district;
+                    districtDropdown.appendChild(option);
+                });
+            }
+            document.getElementById("village").innerHTML = "<option value=''>Select Village</option>";
+            document.getElementById("street").innerHTML = "<option value=''>Select Street</option>";
+        });
+
+        document.getElementById("district").addEventListener("change", function () {
+            const country = document.getElementById("country").value;
+            const state = document.getElementById("state").value;
+            const district = this.value;
+            const villageDropdown = document.getElementById("village");
+            villageDropdown.innerHTML = "<option value=''>Select Village</option>";
+            if (country && state && district && locationData[country][state][district]) {
+                locationData[country][state][district].forEach(function (village) {
+                    const option = document.createElement("option");
+                    option.value = village;
+                    option.textContent = village;
+                    villageDropdown.appendChild(option);
+                });
+            }
+            document.getElementById("street").innerHTML = "<option value=''>Select Street</option>";
+        });
+
+        document.getElementById("village").addEventListener("change", function () {
+            const village = this.value;
+            const streetDropdown = document.getElementById("street");
+            streetDropdown.innerHTML = "<option value=''>Select Street</option>";
+
+            // If the selected village is Hasanparthy, add Chinthagattu as a street option
+            if (village === "Hasanparthy") {
+                const streets = ["Chinthagattu", "Main Street", "Oak Street"];
+                streets.forEach(function (street) {
+                    const option = document.createElement("option");
+                    option.value = street;
+                    option.textContent = street;
+                    streetDropdown.appendChild(option);
+                });
+            }
+        });
+
+        // Function to geocode and locate address on the map
+        function geocodeAddress(address) {
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${address}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        const lat = data[0].lat;
+                        const lon = data[0].lon;
+                        const location = [lat, lon];
+                        
+                        // Move map to the location
+                        map.setView(location, 13);
+                        
+                        // Add a marker at the location
+                        L.marker(location).addTo(map)
+                            .bindPopup(`<b>${address}</b>`)
+                            .openPopup();
+                    } else {
+                        alert('Location not found!');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching data from Nominatim API:', error);
+                    alert('Failed to retrieve location.');
+                });
+        }
+
+        // Function to gather selected location and show on map
+        function locateOnMap() {
+            const country = document.getElementById("country").value;
+            const state = document.getElementById("state").value;
+            const district = document.getElementById("district").value;
+            const village = document.getElementById("village").value;
+            const street = document.getElementById("street").value;
+
+            if (!country || !state || !district || !village || !street) {
+                alert('Please select all fields.');
+                return;
+            }
+
+            // Combine the selected location fields into an address
+            const address = `${street}, ${village}, ${district}, ${state}, ${country}`;
+            
+            // Call the geocode function with the full address
+            geocodeAddress(address);
+        }
+    </script>
+
+</body>
+</html>

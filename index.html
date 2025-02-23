@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Location Safety Tracker</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #map {
+            height: 500px;
+            width: 100%;
+            max-width: 800px;
+            margin: 20px 0;
+        }
+        .info {
+            text-align: center;
+            font-size: 18px;
+            margin: 10px;
+        }
+        .unsafe {
+            color: red;
+            font-weight: bold;
+        }
+        .caution-button,
+        .suggestions-button {
+            display: block;
+            margin-top: 10px;
+            padding: 8px 16px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+        }
+        .caution-button:hover,
+        .suggestions-button:hover {
+            background-color: #d32f2f;
+        }
+        .suggestions {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #ffeb3b;
+            color: #333;
+            border-radius: 5px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Location Safety Tracker</h1>
+    <div id="map"></div>
+    <div class="info" id="safetyInfo">Checking safety status...</div>
+    <div id="suggestionsDiv" class="suggestions" style="display: none;">
+        <p><strong>Suggestions:</strong></p>
+        <ul>
+            <li>Avoid walking alone after dark.</li>
+            <li>Stay in well-lit and populated areas.</li>
+            <li>Consider using a ride-sharing service for transportation.</li>
+        </ul>
+    </div>
+    <button class="suggestions-button" id="suggestionsButton" style="display: none;" onclick="goToSuggestionsPage()">View Suggestions</button>
+    <button class="caution-button" id="sendSafetySMS" style="display: none;" onclick="sendSafetyMessage()">Send Safety Message</button>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // Sample crime report data
+        const crimeData = [
+            {
+                location_name: "Chinthagattu, Hanamkonda",
+                latitude: 17.9756,
+                longitude: 79.6027,
+                number_of_crimes: 5
+            },
+            {
+                location_name: "Hasanparthy, Hanamkonda",
+                latitude: 18.0476,
+                longitude: 79.5696,
+                number_of_crimes: 12
+            },
+            {
+                location_name: "Kazipet, Warangal",
+                latitude: 17.9847,
+                longitude: 79.5228,
+                number_of_crimes: 8
+            },
+            {
+                location_name: "Warangal Fort, Warangal",
+                latitude: 17.9713,
+                longitude: 79.5950,
+                number_of_crimes: 3
+            },
+            {
+                location_name: "Hanamkonda Main Road, Hanamkonda",
+                latitude: 18.0042,
+                longitude: 79.5607,
+                number_of_crimes: 10
+            }
+        ];
+
+        // Initialize map
+        const map = L.map('map').setView([17.9756, 79.6027], 13); // Centered near the sample locations
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Default icon for all locations
+        const defaultIcon = L.icon({
+            iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+            shadowSize: [41, 41]
+        });
+
+        let currentLocation = null;
+
+        // Function to get the user's location
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(position => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                currentLocation = { lat, lon };
+
+                // Determine if the area is safe or unsafe
+                const isUnsafe = checkSafetyStatus(lat, lon);
+
+                // Use the default icon for user's location
+                L.marker([lat, lon], { icon: defaultIcon }).addTo(map)
+                    .bindPopup(isUnsafe ? "<span class='unsafe'>Unsafe</span>" : "You are here")
+                    .openPopup();
+
+                // Update map view to user's location
+                map.setView([lat, lon], 13);
+            }, error => {
+                alert("Unable to retrieve your location. Please enable location services.");
+            });
+        } else {
+            alert("Geolocation is not supported by your browser.");
+        }
+
+        // Function to check safety status based on nearby crime data
+        function checkSafetyStatus(lat, lon) {
+            let closestLocation = null;
+            let minDistance = Infinity;
+
+            // Calculate the distance between the user's location and each crime report location
+            crimeData.forEach(location => {
+                const distance = Math.sqrt(
+                    Math.pow(lat - location.latitude, 2) + Math.pow(lon - location.longitude, 2)
+                );
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestLocation = location;
+                }
+            });
+
+            // Display safety status and return true if unsafe
+            const safetyInfo = document.getElementById('safetyInfo');
+            if (closestLocation && closestLocation.number_of_crimes > 5) {
+                safetyInfo.textContent = `Caution: ${closestLocation.location_name} has reported ${closestLocation.number_of_crimes} incidents.`;
+                safetyInfo.style.color = "red";
+                // Show the "Suggestions" button and "Send Safety Message" button if the area is unsafe
+                document.getElementById('suggestionsButton').style.display = "block";
+                document.getElementById('sendSafetySMS').style.display = "block";
+                return true; // Area is unsafe
+            } else if (closestLocation) {
+                safetyInfo.textContent = `Safe: ${closestLocation.location_name} has reported ${closestLocation.number_of_crimes} incidents.`;
+                safetyInfo.style.color = "green";
+                return false; // Area is safe
+            }
+        }
+
+        // Function to navigate to suggestions page
+        function goToSuggestionsPage() {
+            window.location.href = "suggestions.html";
+        }
+
+        // Function to send safety message via WhatsApp
+        function sendSafetyMessage() {
+            if (currentLocation) {
+                const message = `I'm in an unsafe area! My location is: https://www.openstreetmap.org/?mlat=${currentLocation.lat}&mlon=${currentLocation.lon}#map=16/${currentLocation.lat}/${currentLocation.lon}`;
+                const phoneNumber = '7893382004'; // Replace with the family member's phone number (in international format, e.g., +11234567890)
+                const whatsappLink = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+
+                // Open WhatsApp link
+                window.open(whatsappLink, '_blank');
+            } else {
+                alert("Unable to send the safety message. Location not found.");
+            }
+        }
+    </script>
+
+</body>
+</html>
