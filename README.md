@@ -21,7 +21,7 @@ Machine Learning: Scikit-learn, Pandas
 
 🔹 Setup Instructions
 Clone the repository:
-git clone https://github.com/your-username/Safety-Area-Prediction-System.git
+git clone https://github.com/Poojitha-Thikka/Safety-Area-Prediction-System.git
 
 Navigate to the project folder:
 cd Safety-Area-Prediction-System
